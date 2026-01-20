@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Financial Statements | Kyriba POC</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --kyriba-navy: #1a2744;
+            --kyriba-gold: #c9a227;
+            --kyriba-teal: #2dd4bf;
+            --kyriba-blue: #3b82f6;
+            --bg-dark: #0a0f1a;
+            --bg-card: #111827;
+            --bg-card-hover: #1f2937;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --positive: #10b981;
+            --negative: #ef4444;
+            --warning: #f59e0b;
+            --border: rgba(255,255,255,0.08);
+            --glow-gold: rgba(201, 162, 39, 0.3);
+            --glow-teal: rgba(45, 212, 191, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background effects */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow-1 {
+            top: -200px;
+            left: -200px;
+            background: var(--kyriba-gold);
+        }
+
+        .bg-glow-2 {
+            bottom: -200px;
+            right: -200px;
+            background: var(--kyriba-teal);
+        }
+
+        /* Header */
+        header {
+            position: relative;
+            z-index: 10;
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            background: rgba(10, 15, 26, 0.8);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--kyriba-gold), var(--kyriba-teal));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--bg-dark);
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            color: var(--kyriba-gold);
+        }
+
+        .header-badge {
+            padding: 8px 16px;
+            background: rgba(201, 162, 39, 0.1);
+            border: 1px solid rgba(201, 162, 39, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--kyriba-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Main container */
+        main {
+            position: relative;
+            z-index: 10;
+            padding: 32px 40px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* Title section */
+        .title-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title-section h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--text-primary), var(--kyriba-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .title-section p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Control panel */
+        .control-panel {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Sora', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--kyriba-gold), #d4af37);
+            color: var(--bg-dark);
+            box-shadow: 0 4px 20px var(--glow-gold);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--glow-gold);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--kyriba-teal);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--negative);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Transaction feed */
+        .transaction-feed {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .feed-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .feed-title h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--positive);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--positive);
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .transaction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: grid;
+            grid-template-columns: 100px 1fr 140px 120px;
+            gap: 16px;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            font-size: 13px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .transaction-item.highlight {
+            background: rgba(201, 162, 39, 0.1);
+            border: 1px solid rgba(201, 162, 39, 0.3);
+        }
+
+        .tx-time {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .tx-description {
+            color: var(--text-primary);
+        }
+
+        .tx-category {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tx-category.operating { background: rgba(59, 130, 246, 0.2); color: var(--kyriba-blue); }
+        .tx-category.financing { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+        .tx-category.investing { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+        .tx-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .tx-amount.positive { color: var(--positive); }
+        .tx-amount.negative { color: var(--negative); }
+
+        /* Financial statements grid */
+        .statements-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .statement-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .statement-card:hover {
+            border-color: rgba(201, 162, 39, 0.3);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+        }
+
+        .statement-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .statement-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .statement-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .statement-icon.cf { background: rgba(45, 212, 191, 0.2); }
+        .statement-icon.bs { background: rgba(59, 130, 246, 0.2); }
+        .statement-icon.pl { background: rgba(201, 162, 39, 0.2); }
+
+        .statement-badge {
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-realtime {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--positive);
+        }
+
+        .statement-body {
+            padding: 20px 24px;
+        }
+
+        .statement-section {
+            margin-bottom: 20px;
+        }
+
+        .statement-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .line-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+
+        .line-item-label {
+            color: var(--text-secondary);
+        }
+
+        .line-item-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .line-item-value.positive { color: var(--positive); }
+        .line-item-value.negative { color: var(--negative); }
+
+        .line-item-value.flash {
+            animation: valueFlash 0.6s ease-out;
+        }
+
+        @keyframes valueFlash {
+            0% { background: rgba(201, 162, 39, 0.4); }
+            100% { background: transparent; }
+        }
+
+        .line-item.total {
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 2px solid var(--border);
+        }
+
+        .line-item.total .line-item-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .line-item.total .line-item-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .line-item.kyriba-source {
+            position: relative;
+        }
+
+        .line-item.kyriba-source::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 70%;
+            background: var(--kyriba-gold);
+            border-radius: 2px;
+        }
+
+        /* Flow arrows */
+        .flow-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            color: var(--kyriba-gold);
+            font-size: 24px;
+            animation: flowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes flowPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .stat-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-value.positive { color: var(--positive); }
+        .stat-value.gold { color: var(--kyriba-gold); }
+        .stat-value.teal { color: var(--kyriba-teal); }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Comparison mode */
+        .comparison-container {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .comparison-container.active {
+            display: grid;
+        }
+
+        .comparison-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .comparison-panel.traditional {
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .comparison-panel.realtime {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .panel-badge {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .panel-badge.old {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--negative);
+        }
+
+        .panel-badge.new {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--positive);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .delay-indicator {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px dashed rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .delay-indicator .big {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--negative);
+        }
+
+        .delay-indicator .small {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .statements-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon">K</div>
+            <div class="logo-text">Kyriba <span>Real-Time FS</span></div>
+        </div>
+        <div class="header-badge">Proof of Concept</div>
+    </header>
+
+    <main>
+        <div class="title-section">
+            <h1>Real-Time Financial Statement Integration</h1>
+            <p>Watch how bank transactions flow instantly through Cash Flow → Balance Sheet → P&L. No more month-end delays.</p>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn btn-primary" onclick="simulateTransaction()">
+                <span>⚡</span> Simulate Bank Transaction
+            </button>
+            <button class="btn btn-secondary" onclick="simulateBatch()">
+                <span>📦</span> Simulate Day's Activity
+            </button>
+            <button class="btn btn-secondary" onclick="toggleComparison()">
+                <span>⚖️</span> Compare Traditional vs Real-Time
+            </button>
+            <button class="btn btn-danger" onclick="resetAll()">
+                <span>↺</span> Reset
+            </button>
+        </div>
+
+        <div class="transaction-feed">
+            <div class="feed-header">
+                <div class="feed-title">
+                    <h3>🏦 Bank Feed</h3>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        Live
+                    </div>
+                </div>
+                <span style="color: var(--text-muted); font-size: 13px;">Transactions cascade to all statements instantly</span>
+            </div>
+            <div class="transaction-list" id="transactionList">
+                <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    Click "Simulate Bank Transaction" to see real-time flow
+                </div>
+            </div>
+        </div>
+
+        <div class="statements-grid">
+            <!-- Cash Flow Statement -->
+            <div class="statement-card">
+                <div class="statement-header">
+                    <h3>
+                        <div class="statement-icon cf">💵</div>
+                        Cash Flow Statement
+                    </h3>
+                    <span class="statement-badge badge-realtime">Real-time</span>
+                </div>
+                <div class="statement-body">
+                    <div class="statement-section">
+                        <div class="section-title">Operating Activities</div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Collections (AR)</span>
+                            <span class="line-item-value positive" id="cf-collections">+€0</span>
+                        </div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Payments (AP)</span>
+                            <span class="line-item-value negative" id="cf-payments">-€0</span>
+                        </div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Payroll</span>
+                            <span class="line-item-value negative" id="cf-payroll">-€0</span>
+                        </div>
+                        <div class="line-item total">
+                            <span class="line-item-label">Net Operating CF</span>
+                            <span class="line-item-value" id="cf-operating-total">€0</span>
+                        </div>
+                    </div>
+                    <div class="statement-section">
+                        <div class="section-title">Financing Activities</div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Debt Draws / Repayments</span>
+                            <span class="line-item-value" id="cf-debt">€0</span>
+                        </div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Interest Paid</span>
+                            <span class="line-item-value negative" id="cf-interest">-€0</span>
+                        </div>
+                        <div class="line-item total">
+                            <span class="line-item-label">Net Financing CF</span>
+                            <span class="line-item-value" id="cf-financing-total">€0</span>
+                        </div>
+                    </div>
+                    <div class="statement-section">
+                        <div class="section-title">Investing Activities</div>
+                        <div class="line-item">
+                            <span class="line-item-label">CapEx</span>
+                            <span class="line-item-value negative" id="cf-capex">-€0</span>
+                        </div>
+                        <div class="line-item total">
+                            <span class="line-item-label">Net Change in Cash</span>
+                            <span class="line-item-value" id="cf-net-change" style="font-size: 18px;">€0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance Sheet -->
+            <div class="statement-card">
+                <div class="statement-header">
+                    <h3>
+                        <div class="statement-icon bs">📊</div>
+                        Balance Sheet
+                    </h3>
+                    <span class="statement-badge badge-realtime">Real-time</span>
+                </div>
+                <div class="statement-body">
+                    <div class="statement-section">
+                        <div class="section-title">Assets</div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Cash & Equivalents</span>
+                            <span class="line-item-value positive" id="bs-cash">€60,000,000</span>
+                        </div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Accounts Receivable</span>
+                            <span class="line-item-value" id="bs-ar">€18,500,000</span>
+                        </div>
+                        <div class="line-item">
+                            <span class="line-item-label">Inventory</span>
+                            <span class="line-item-value" id="bs-inventory">€24,300,000</span>
+                        </div>
+                        <div class="line-item">
+                            <span class="line-item-label">PP&E (net)</span>
+                            <span class="line-item-value" id="bs-ppe">€48,000,000</span>
+                        </div>
+                        <div class="line-item total">
+                            <span class="line-item-label">Total Assets</span>
+                            <span class="line-item-value positive" id="bs-total-assets">€150,800,000</span>
+                        </div>
+                    </div>
+                    <div class="statement-section">
+                        <div class="section-title">Liabilities</div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Accounts Payable</span>
+                            <span class="line-item-value" id="bs-ap">€12,300,000</span>
+                        </div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Total Debt</span>
+                            <span class="line-item-value" id="bs-debt">€45,000,000</span>
+                        </div>
+                        <div class="line-item">
+                            <span class="line-item-label">Accrued Interest</span>
+                            <span class="line-item-value" id="bs-accrued-interest">€266,000</span>
+                        </div>
+                    </div>
+                    <div class="statement-section">
+                        <div class="section-title">Equity</div>
+                        <div class="line-item total">
+                            <span class="line-item-label">Retained Earnings</span>
+                            <span class="line-item-value positive" id="bs-retained">€93,234,000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- P&L Statement -->
+            <div class="statement-card">
+                <div class="statement-header">
+                    <h3>
+                        <div class="statement-icon pl">📈</div>
+                        Income Statement
+                    </h3>
+                    <span class="statement-badge badge-realtime">Real-time</span>
+                </div>
+                <div class="statement-body">
+                    <div class="statement-section">
+                        <div class="section-title">Revenue</div>
+                        <div class="line-item">
+                            <span class="line-item-label">Gross Revenue</span>
+                            <span class="line-item-value positive" id="pl-revenue">€100,000,000</span>
+                        </div>
+                        <div class="line-item">
+                            <span class="line-item-label">COGS</span>
+                            <span class="line-item-value negative" id="pl-cogs">-€60,000,000</span>
+                        </div>
+                        <div class="line-item total">
+                            <span class="line-item-label">Gross Profit</span>
+                            <span class="line-item-value positive" id="pl-gross-profit">€40,000,000</span>
+                        </div>
+                    </div>
+                    <div class="statement-section">
+                        <div class="section-title">Operating Expenses</div>
+                        <div class="line-item">
+                            <span class="line-item-label">OpEx</span>
+                            <span class="line-item-value negative" id="pl-opex">-€25,000,000</span>
+                        </div>
+                        <div class="line-item">
+                            <span class="line-item-label">D&A</span>
+                            <span class="line-item-value negative" id="pl-da">-€2,000,000</span>
+                        </div>
+                        <div class="line-item total">
+                            <span class="line-item-label">Operating Income</span>
+                            <span class="line-item-value positive" id="pl-operating-income">€13,000,000</span>
+                        </div>
+                    </div>
+                    <div class="statement-section">
+                        <div class="section-title">Below the Line (Kyriba-Calculated)</div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">Interest Expense</span>
+                            <span class="line-item-value negative" id="pl-interest">-€2,660,000</span>
+                        </div>
+                        <div class="line-item kyriba-source">
+                            <span class="line-item-label">FX Impact</span>
+                            <span class="line-item-value negative" id="pl-fx">-€300,000</span>
+                        </div>
+                        <div class="line-item total">
+                            <span class="line-item-label">Net Income</span>
+                            <span class="line-item-value positive" id="pl-net-income" style="font-size: 18px;">€10,040,000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value gold" id="stat-transactions">0</div>
+                <div class="stat-label">Transactions Processed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value teal" id="stat-latency">&lt;1s</div>
+                <div class="stat-label">Statement Update Latency</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value positive" id="stat-cash-impact">€0</div>
+                <div class="stat-label">Net Cash Impact</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-ni-impact">€0</div>
+                <div class="stat-label">Net Income Impact</div>
+            </div>
+        </div>
+
+        <!-- Comparison panel -->
+        <div class="comparison-container" id="comparisonContainer">
+            <div class="comparison-panel traditional">
+                <div class="panel-header">
+                    <span class="panel-badge old">Traditional</span>
+                    <span class="panel-title">Month-End Close</span>
+                </div>
+                <div class="delay-indicator">
+                    <div class="big">15-20 days</div>
+                    <div class="small">Average time to see today's transactions in financial statements</div>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">Cash position accuracy</span>
+                    <span class="line-item-value negative">3-5 days stale</span>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">Interest calculation</span>
+                    <span class="line-item-value negative">Budget-based estimate</span>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">FX impact</span>
+                    <span class="line-item-value negative">Month-end spot rate</span>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">Reconciliation</span>
+                    <span class="line-item-value negative">Manual, 2-3 days</span>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">CFO visibility</span>
+                    <span class="line-item-value negative">Retrospective only</span>
+                </div>
+            </div>
+            <div class="comparison-panel realtime">
+                <div class="panel-header">
+                    <span class="panel-badge new">Kyriba Real-Time</span>
+                    <span class="panel-title">Continuous Close</span>
+                </div>
+                <div class="delay-indicator" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3);">
+                    <div class="big" style="color: var(--positive);">&lt;1 second</div>
+                    <div class="small">Transaction hits bank → Financial statements updated</div>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">Cash position accuracy</span>
+                    <span class="line-item-value positive">Real-time from bank feed</span>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">Interest calculation</span>
+                    <span class="line-item-value positive">Actual debt × rate</span>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">FX impact</span>
+                    <span class="line-item-value positive">Daily mark-to-market</span>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">Reconciliation</span>
+                    <span class="line-item-value positive">Automatic, instant</span>
+                </div>
+                <div class="line-item">
+                    <span class="line-item-label">CFO visibility</span>
+                    <span class="line-item-value positive">Predictive & real-time</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // State
+        let state = {
+            cash: 60000000,
+            ar: 18500000,
+            ap: 12300000,
+            debt: 45000000,
+            accruedInterest: 266000,
+            inventory: 24300000,
+            ppe: 48000000,
+            retainedEarnings: 93234000,
+            revenue: 100000000,
+            cogs: 60000000,
+            opex: 25000000,
+            da: 2000000,
+            interestExpense: 2660000,
+            fxImpact: 300000,
+            // CF tracking
+            cfCollections: 0,
+            cfPayments: 0,
+            cfPayroll: 0,
+            cfDebt: 0,
+            cfInterest: 0,
+            cfCapex: 0,
+            // Stats
+            transactionCount: 0,
+            netCashImpact: 0,
+            netIncomeImpact: 0
+        };
+
+        const initialState = {...state};
+
+        // Transaction templates
+        const transactionTemplates = [
+            { desc: "Customer payment received - ACME Corp", category: "operating", type: "collection", min: 50000, max: 500000 },
+            { desc: "Customer payment received - GlobalTech", category: "operating", type: "collection", min: 100000, max: 800000 },
+            { desc: "Supplier payment - Raw Materials Ltd", category: "operating", type: "payment", min: -300000, max: -50000 },
+            { desc: "Supplier payment - Logistics Inc", category: "operating", type: "payment", min: -200000, max: -30000 },
+            { desc: "Payroll disbursement", category: "operating", type: "payroll", min: -1500000, max: -500000 },
+            { desc: "Interest payment on credit facility", category: "financing", type: "interest", min: -150000, max: -50000 },
+            { desc: "Credit line draw", category: "financing", type: "debt", min: 1000000, max: 5000000 },
+            { desc: "Debt repayment", category: "financing", type: "debt", min: -2000000, max: -500000 },
+            { desc: "Equipment purchase - Production line", category: "investing", type: "capex", min: -800000, max: -100000 },
+        ];
+
+        // Format currency
+        function formatCurrency(value, showSign = false) {
+            const sign = value >= 0 ? (showSign ? '+' : '') : '-';
+            const absValue = Math.abs(value);
+            if (absValue >= 1000000) {
+                return sign + '€' + (absValue / 1000000).toFixed(1) + 'M';
+            } else if (absValue >= 1000) {
+                return sign + '€' + (absValue / 1000).toFixed(0) + 'K';
+            }
+            return sign + '€' + absValue.toFixed(0);
+        }
+
+        // Format full currency
+        function formatFullCurrency(value) {
+            return '€' + value.toLocaleString('en-US');
+        }
+
+        // Update element with flash effect
+        function updateElement(id, value, formatter = formatFullCurrency) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            
+            const newValue = formatter(value);
+            if (el.textContent !== newValue) {
+                el.textContent = newValue;
+                el.classList.add('flash');
+                setTimeout(() => el.classList.remove('flash'), 600);
+            }
+
+            // Update color classes
+            el.classList.remove('positive', 'negative');
+            if (value > 0) el.classList.add('positive');
+            else if (value < 0) el.classList.add('negative');
+        }
+
+        // Add transaction to feed
+        function addTransaction(tx) {
+            const list = document.getElementById('transactionList');
+            
+            // Remove placeholder if exists
+            if (list.children.length === 1 && list.children[0].style.textAlign === 'center') {
+                list.innerHTML = '';
+            }
+
+            const now = new Date();
+            const timeStr = now.toTimeString().slice(0, 8);
+            
+            const item = document.createElement('div');
+            item.className = 'transaction-item highlight';
+            item.innerHTML = `
+                <span class="tx-time">${timeStr}</span>
+                <span class="tx-description">${tx.desc}</span>
+                <span class="tx-category ${tx.category}">${tx.category}</span>
+                <span class="tx-amount ${tx.amount >= 0 ? 'positive' : 'negative'}">${formatCurrency(tx.amount, true)}</span>
+            `;
+            
+            list.insertBefore(item, list.firstChild);
+            
+            // Remove highlight after animation
+            setTimeout(() => item.classList.remove('highlight'), 2000);
+            
+            // Keep only last 10 transactions
+            while (list.children.length > 10) {
+                list.removeChild(list.lastChild);
+            }
+        }
+
+        // Process transaction
+        function processTransaction(tx) {
+            state.transactionCount++;
+            state.netCashImpact += tx.amount;
+
+            // Update cash
+            state.cash += tx.amount;
+
+            // Update CF categories
+            switch (tx.type) {
+                case 'collection':
+                    state.cfCollections += tx.amount;
+                    state.ar -= tx.amount; // AR decreases when collected
+                    break;
+                case 'payment':
+                    state.cfPayments += tx.amount;
+                    state.ap += tx.amount; // AP decreases when paid (amount is negative)
+                    break;
+                case 'payroll':
+                    state.cfPayroll += tx.amount;
+                    break;
+                case 'debt':
+                    state.cfDebt += tx.amount;
+                    state.debt += tx.amount;
+                    // Recalculate interest expense based on new debt level
+                    const oldInterest = state.interestExpense;
+                    state.interestExpense = state.debt * 0.071; // 7.1% rate
+                    state.netIncomeImpact -= (state.interestExpense - oldInterest);
+                    break;
+                case 'interest':
+                    state.cfInterest += tx.amount;
+                    break;
+                case 'capex':
+                    state.cfCapex += tx.amount;
+                    state.ppe -= tx.amount; // PPE increases (amount is negative)
+                    break;
+            }
+
+            // Update retained earnings based on cash impact (simplified)
+            if (tx.type === 'collection') {
+                state.retainedEarnings += tx.amount * 0.3; // Assume 30% margin
+                state.netIncomeImpact += tx.amount * 0.3;
+            }
+
+            updateAllStatements();
+        }
+
+        // Update all financial statements
+        function updateAllStatements() {
+            // Cash Flow Statement
+            updateElement('cf-collections', state.cfCollections, v => formatCurrency(v, true));
+            updateElement('cf-payments', state.cfPayments, v => formatCurrency(v, false));
+            updateElement('cf-payroll', state.cfPayroll, v => formatCurrency(v, false));
+            const operatingTotal = state.cfCollections + state.cfPayments + state.cfPayroll;
+            updateElement('cf-operating-total', operatingTotal, v => formatCurrency(v, true));
+
+            updateElement('cf-debt', state.cfDebt, v => formatCurrency(v, true));
+            updateElement('cf-interest', state.cfInterest, v => formatCurrency(v, false));
+            const financingTotal = state.cfDebt + state.cfInterest;
+            updateElement('cf-financing-total', financingTotal, v => formatCurrency(v, true));
+
+            updateElement('cf-capex', state.cfCapex, v => formatCurrency(v, false));
+            const netChange = operatingTotal + financingTotal + state.cfCapex;
+            updateElement('cf-net-change', netChange, v => formatCurrency(v, true));
+
+            // Balance Sheet
+            updateElement('bs-cash', state.cash);
+            updateElement('bs-ar', state.ar);
+            updateElement('bs-ap', state.ap);
+            updateElement('bs-inventory', state.inventory);
+            updateElement('bs-ppe', state.ppe);
+            updateElement('bs-debt', state.debt);
+            updateElement('bs-accrued-interest', state.accruedInterest);
+            updateElement('bs-retained', state.retainedEarnings);
+
+            const totalAssets = state.cash + state.ar + state.inventory + state.ppe;
+            updateElement('bs-total-assets', totalAssets);
+
+            // Income Statement
+            updateElement('pl-revenue', state.revenue);
+            updateElement('pl-cogs', -state.cogs);
+            updateElement('pl-gross-profit', state.revenue - state.cogs);
+            updateElement('pl-opex', -state.opex);
+            updateElement('pl-da', -state.da);
+            updateElement('pl-operating-income', state.revenue - state.cogs - state.opex - state.da);
+            updateElement('pl-interest', -state.interestExpense);
+            updateElement('pl-fx', -state.fxImpact);
+            
+            const netIncome = state.revenue - state.cogs - state.opex - state.da - state.interestExpense - state.fxImpact;
+            updateElement('pl-net-income', netIncome);
+
+            // Stats
+            document.getElementById('stat-transactions').textContent = state.transactionCount;
+            document.getElementById('stat-cash-impact').textContent = formatCurrency(state.netCashImpact, true);
+            document.getElementById('stat-ni-impact').textContent = formatCurrency(state.netIncomeImpact, true);
+            
+            const cashImpactEl = document.getElementById('stat-cash-impact');
+            const niImpactEl = document.getElementById('stat-ni-impact');
+            
+            cashImpactEl.className = 'stat-value ' + (state.netCashImpact >= 0 ? 'positive' : 'negative');
+            niImpactEl.className = 'stat-value ' + (state.netIncomeImpact >= 0 ? 'positive' : 'negative');
+        }
+
+        // Simulate single transaction
+        function simulateTransaction() {
+            const template = transactionTemplates[Math.floor(Math.random() * transactionTemplates.length)];
+            const amount = Math.floor(Math.random() * (template.max - template.min + 1)) + template.min;
+            
+            const tx = {
+                desc: template.desc,
+                category: template.category,
+                type: template.type,
+                amount: amount
+            };
+
+            addTransaction(tx);
+            processTransaction(tx);
+        }
+
+        // Simulate batch of transactions
+        function simulateBatch() {
+            let delay = 0;
+            const count = 5 + Math.floor(Math.random() * 5); // 5-10 transactions
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(simulateTransaction, delay);
+                delay += 300 + Math.random() * 400; // 300-700ms between transactions
+            }
+        }
+
+        // Toggle comparison view
+        function toggleComparison() {
+            const container = document.getElementById('comparisonContainer');
+            container.classList.toggle('active');
+        }
+
+        // Reset all
+        function resetAll() {
+            state = {...initialState};
+            state.cfCollections = 0;
+            state.cfPayments = 0;
+            state.cfPayroll = 0;
+            state.cfDebt = 0;
+            state.cfInterest = 0;
+            state.cfCapex = 0;
+            state.transactionCount = 0;
+            state.netCashImpact = 0;
+            state.netIncomeImpact = 0;
+
+            document.getElementById('transactionList').innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    Click "Simulate Bank Transaction" to see real-time flow
+                </div>
+            `;
+
+            updateAllStatements();
+        }
+
+        // Initialize
+        updateAllStatements();
+    </script>
+</body>
+</html>
